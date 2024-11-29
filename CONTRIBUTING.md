@@ -4,7 +4,7 @@ Thank you for showing an interest in contributing to Plane! All kinds of contrib
 
 ## Submitting an issue
 
-Before submitting a new issue, please search the [issues](https://github.com/makeplane/plane/issues) tab. Maybe an issue or discussion already exists and might inform you of workarounds. Otherwise, you can give new informplaneation.
+Before submitting a new issue, please search the [issues](https://github.com/makeplane/plane/issues) tab. Maybe an issue or discussion already exists and might inform you of workarounds. Otherwise, you can give new information.
 
 While we want to fix all the [issues](https://github.com/makeplane/plane/issues), before fixing a bug we need to be able to reproduce and confirm it. Please provide us with a minimal reproduction scenario using a repository or [Gist](https://gist.github.com/). Having a live, reproducible scenario gives us the information without asking questions back & forth with additional questions like:
 
@@ -29,6 +29,26 @@ You can open a new issue with this [issue form](https://github.com/makeplane/pla
 The project is a monorepo, with backend api and frontend in a single repo.
 
 The backend is a django project which is kept inside apiserver
+
+1. Clone the repo
+
+```bash
+git clone https://github.com/makeplane/plane.git [folder-name]
+cd [folder-name]
+chmod +x setup.sh
+```
+
+2. Run setup.sh
+
+```bash
+./setup.sh
+```
+
+3. Start the containers
+
+```bash
+docker compose -f docker-compose-local.yml up
+```
 
 ## Missing a Feature?
 

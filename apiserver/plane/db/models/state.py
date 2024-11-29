@@ -1,9 +1,10 @@
 # Django imports
 from django.db import models
 from django.template.defaultfilters import slugify
+from django.db.models import Q
 
 # Module imports
-from . import ProjectBaseModel
+from .project import ProjectBaseModel
 
 
 class State(ProjectBaseModel):
@@ -19,18 +20,29 @@ class State(ProjectBaseModel):
             ("started", "Started"),
             ("completed", "Completed"),
             ("cancelled", "Cancelled"),
+            ("triage", "Triage"),
         ),
         default="backlog",
         max_length=20,
     )
+    is_triage = models.BooleanField(default=False)
     default = models.BooleanField(default=False)
+    external_source = models.CharField(max_length=255, null=True, blank=True)
+    external_id = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         """Return name of the state"""
         return f"{self.name} <{self.project.name}>"
 
     class Meta:
-        unique_together = ["name", "project"]
+        unique_together = ["name", "project", "deleted_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "project"],
+                condition=Q(deleted_at__isnull=True),
+                name="state_unique_name_project_when_deleted_at_null",
+            )
+        ]
         verbose_name = "State"
         verbose_name_plural = "States"
         db_table = "states"

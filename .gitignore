@@ -16,6 +16,8 @@ node_modules
 
 # Production
 /build
+dist/
+out/
 
 # Misc
 .DS_Store
@@ -49,6 +51,7 @@ staticfiles
 mediafiles
 .env
 .DS_Store
+logs/
 
 node_modules/
 assets/dist/
@@ -73,3 +76,12 @@ pnpm-lock.yaml
 pnpm-workspace.yaml
 
 .npmrc
+.secrets
+tmp/
+## packages
+dist
+.temp/
+deploy/selfhost/plane-app/
+## Storybook
+*storybook.log
+output.css
