@@ -1,150 +1,30 @@
-from .project import (
-    ProjectViewSet,
-    ProjectMemberViewSet,
-    UserProjectInvitationsViewset,
-    InviteProjectEndpoint,
-    AddTeamToProjectEndpoint,
-    ProjectMemberInvitationsViewset,
-    ProjectMemberInviteDetailViewSet,
-    ProjectIdentifierEndpoint,
-    AddMemberToProjectEndpoint,
-    ProjectJoinEndpoint,
-    ProjectUserViewsEndpoint,
-    ProjectMemberUserEndpoint,
-    ProjectFavoritesViewSet,
-)
-from .people import (
-    UserEndpoint,
-    UpdateUserOnBoardedEndpoint,
-    UserActivityEndpoint,
-)
+from .project import ProjectAPIEndpoint, ProjectArchiveUnarchiveAPIEndpoint
 
-from .oauth import OauthEndpoint
+from .state import StateAPIEndpoint
 
-from .base import BaseAPIView, BaseViewSet
-
-from .workspace import (
-    WorkSpaceViewSet,
-    UserWorkSpacesEndpoint,
-    WorkSpaceAvailabilityCheckEndpoint,
-    InviteWorkspaceEndpoint,
-    JoinWorkspaceEndpoint,
-    WorkSpaceMemberViewSet,
-    TeamMemberViewSet,
-    WorkspaceInvitationsViewset,
-    UserWorkspaceInvitationsEndpoint,
-    UserWorkspaceInvitationEndpoint,
-    UserLastProjectWithWorkspaceEndpoint,
-    WorkspaceMemberUserEndpoint,
-    WorkspaceMemberUserViewsEndpoint,
-    UserActivityGraphEndpoint,
-    UserIssueCompletedGraphEndpoint,
-    UserWorkspaceDashboardEndpoint,
-    WorkspaceThemeViewSet,
-)
-from .state import StateViewSet
-from .shortcut import ShortCutViewSet
-from .view import IssueViewViewSet, ViewIssuesEndpoint, IssueViewFavoriteViewSet
-from .cycle import (
-    CycleViewSet,
-    CycleIssueViewSet,
-    CycleDateCheckEndpoint,
-    CurrentUpcomingCyclesEndpoint,
-    CompletedCyclesEndpoint,
-    CycleFavoriteViewSet,
-    DraftCyclesEndpoint,
-    TransferCycleIssueEndpoint,
-    InCompleteCyclesEndpoint,
-)
-from .asset import FileAssetEndpoint, UserAssetsEndpoint
 from .issue import (
-    IssueViewSet,
-    WorkSpaceIssuesEndpoint,
-    IssueActivityEndpoint,
-    IssueCommentViewSet,
-    TimeLineIssueViewSet,
-    IssuePropertyViewSet,
-    LabelViewSet,
-    BulkDeleteIssuesEndpoint,
-    UserWorkSpaceIssues,
-    SubIssuesEndpoint,
-    IssueLinkViewSet,
-    BulkCreateIssueLabelsEndpoint,
+    WorkspaceIssueAPIEndpoint,
+    IssueAPIEndpoint,
+    LabelAPIEndpoint,
+    IssueLinkAPIEndpoint,
+    IssueCommentAPIEndpoint,
+    IssueActivityAPIEndpoint,
     IssueAttachmentEndpoint,
 )
 
-from .auth_extended import (
-    VerifyEmailEndpoint,
-    RequestEmailVerificationEndpoint,
-    ForgotPasswordEndpoint,
-    ResetPasswordEndpoint,
-    ChangePasswordEndpoint,
-)
-
-
-from .authentication import (
-    SignInEndpoint,
-    SignOutEndpoint,
-    MagicSignInEndpoint,
-    MagicSignInGenerateEndpoint,
+from .cycle import (
+    CycleAPIEndpoint,
+    CycleIssueAPIEndpoint,
+    TransferCycleIssueAPIEndpoint,
+    CycleArchiveUnarchiveAPIEndpoint,
 )
 
 from .module import (
-    ModuleViewSet,
-    ModuleIssueViewSet,
-    ModuleLinkViewSet,
-    ModuleFavoriteViewSet,
+    ModuleAPIEndpoint,
+    ModuleIssueAPIEndpoint,
+    ModuleArchiveUnarchiveAPIEndpoint,
 )
 
-from .api_token import ApiTokenEndpoint
+from .member import ProjectMemberAPIEndpoint
 
-from .integration import (
-    WorkspaceIntegrationViewSet,
-    IntegrationViewSet,
-    GithubIssueSyncViewSet,
-    GithubRepositorySyncViewSet,
-    GithubCommentSyncViewSet,
-    GithubRepositoriesEndpoint,
-    BulkCreateGithubIssueSyncEndpoint,
-    SlackProjectSyncViewSet,
-)
-
-from .importer import (
-    ServiceIssueImportSummaryEndpoint,
-    ImportServiceEndpoint,
-    UpdateServiceImportStatusEndpoint,
-    BulkImportIssuesEndpoint,
-    BulkImportModulesEndpoint,
-)
-
-from .page import (
-    PageViewSet,
-    PageBlockViewSet,
-    PageFavoriteViewSet,
-    CreateIssueFromPageBlockEndpoint,
-    RecentPagesEndpoint,
-    FavoritePagesEndpoint,
-    MyPagesEndpoint,
-    CreatedbyOtherPagesEndpoint,
-)
-
-from .search import GlobalSearchEndpoint, IssueSearchEndpoint
-
-
-from .gpt import GPTIntegrationEndpoint
-
-from .estimate import (
-    ProjectEstimatePointEndpoint,
-    BulkEstimatePointEndpoint,
-)
-
-
-from .release import ReleaseNotesEndpoint
-
-from .analytic import (
-    AnalyticsEndpoint,
-    AnalyticViewViewset,
-    SavedAnalyticEndpoint,
-    ExportAnalyticsEndpoint,
-    DefaultAnalyticsEndpoint,
-)
+from .intake import IntakeIssueAPIEndpoint

@@ -1,9 +1,9 @@
 {
-  "extends": "../tsconfig/nextjs.json",
-  "include": ["."],
-  "exclude": ["dist", "build", "node_modules"],
+  "extends": "@plane/typescript-config/react-library.json",
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "lib": ["DOM"]
-  }
+    "jsx": "react",
+    "lib": ["esnext", "dom"]
+  },
+  "include": ["."],
+  "exclude": ["dist", "build", "node_modules"]
 }

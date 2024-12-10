@@ -16,6 +16,8 @@ node_modules
 
 # Production
 /build
+dist/
+out/
 
 # Misc
 .DS_Store
@@ -43,11 +45,13 @@ yarn-error.log*
 
 ## Django ##
 venv
+.venv
 *.pyc
 staticfiles
 mediafiles
 .env
 .DS_Store
+logs/
 
 node_modules/
 assets/dist/
@@ -70,3 +74,14 @@ package-lock.json
 package-lock.json
 pnpm-lock.yaml
 pnpm-workspace.yaml
+
+.npmrc
+.secrets
+tmp/
+## packages
+dist
+.temp/
+deploy/selfhost/plane-app/
+## Storybook
+*storybook.log
+output.css
