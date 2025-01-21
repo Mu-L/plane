@@ -1,11 +1,10 @@
 # Python imports
-import uuid
 
 # Django imports
 from django.db import models
 
 # Module imports
-from plane.db.models import ProjectBaseModel
+from plane.db.models.project import ProjectBaseModel
 
 
 class SlackProjectSync(ProjectBaseModel):

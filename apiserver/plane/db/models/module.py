@@ -1,9 +1,54 @@
 # Django imports
-from django.db import models
 from django.conf import settings
+from django.db import models
+from django.db.models import Q
 
 # Module imports
-from . import ProjectBaseModel
+from .project import ProjectBaseModel
+
+
+def get_default_filters():
+    return {
+        "priority": None,
+        "state": None,
+        "state_group": None,
+        "assignees": None,
+        "created_by": None,
+        "labels": None,
+        "start_date": None,
+        "target_date": None,
+        "subscriber": None,
+    }
+
+
+def get_default_display_filters():
+    return {
+        "group_by": None,
+        "order_by": "-created_at",
+        "type": None,
+        "sub_issue": True,
+        "show_empty_groups": True,
+        "layout": "list",
+        "calendar_date_range": "",
+    }
+
+
+def get_default_display_properties():
+    return {
+        "assignee": True,
+        "attachment_count": True,
+        "created_on": True,
+        "due_date": True,
+        "estimate": True,
+        "key": True,
+        "labels": True,
+        "link": True,
+        "priority": True,
+        "start_date": True,
+        "state": True,
+        "sub_issue_count": True,
+        "updated_on": True,
+    }
 
 
 class Module(ProjectBaseModel):
@@ -41,9 +86,20 @@ class Module(ProjectBaseModel):
     )
     view_props = models.JSONField(default=dict)
     sort_order = models.FloatField(default=65535)
+    external_source = models.CharField(max_length=255, null=True, blank=True)
+    external_id = models.CharField(max_length=255, blank=True, null=True)
+    archived_at = models.DateTimeField(null=True)
+    logo_props = models.JSONField(default=dict)
 
     class Meta:
-        unique_together = ["name", "project"]
+        unique_together = ["name", "project", "deleted_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "project"],
+                condition=Q(deleted_at__isnull=True),
+                name="module_unique_name_project_when_deleted_at_null",
+            )
+        ]
         verbose_name = "Module"
         verbose_name_plural = "Modules"
         db_table = "modules"
@@ -51,9 +107,9 @@ class Module(ProjectBaseModel):
 
     def save(self, *args, **kwargs):
         if self._state.adding:
-            smallest_sort_order = Module.objects.filter(
-                project=self.project
-            ).aggregate(smallest=models.Min("sort_order"))["smallest"]
+            smallest_sort_order = Module.objects.filter(project=self.project).aggregate(
+                smallest=models.Min("sort_order")
+            )["smallest"]
 
             if smallest_sort_order is not None:
                 self.sort_order = smallest_sort_order - 10000
@@ -69,7 +125,14 @@ class ModuleMember(ProjectBaseModel):
     member = models.ForeignKey("db.User", on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ["module", "member"]
+        unique_together = ["module", "member", "deleted_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["module", "member"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="module_member_unique_module_member_when_deleted_at_null",
+            )
+        ]
         verbose_name = "Module Member"
         verbose_name_plural = "Module Members"
         db_table = "module_members"
@@ -83,11 +146,19 @@ class ModuleIssue(ProjectBaseModel):
     module = models.ForeignKey(
         "db.Module", on_delete=models.CASCADE, related_name="issue_module"
     )
-    issue = models.OneToOneField(
+    issue = models.ForeignKey(
         "db.Issue", on_delete=models.CASCADE, related_name="issue_module"
     )
 
     class Meta:
+        unique_together = ["issue", "module", "deleted_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["issue", "module"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="module_issue_unique_issue_module_when_deleted_at_null",
+            )
+        ]
         verbose_name = "Module Issue"
         verbose_name_plural = "Module Issues"
         db_table = "module_issues"
@@ -115,27 +186,32 @@ class ModuleLink(ProjectBaseModel):
         return f"{self.module.name} {self.url}"
 
 
-class ModuleFavorite(ProjectBaseModel):
-    """_summary_
-    ModuleFavorite (model): To store all the module favorite of the user
-    """
-
+class ModuleUserProperties(ProjectBaseModel):
+    module = models.ForeignKey(
+        "db.Module", on_delete=models.CASCADE, related_name="module_user_properties"
+    )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="module_favorites",
+        related_name="module_user_properties",
     )
-    module = models.ForeignKey(
-        "db.Module", on_delete=models.CASCADE, related_name="module_favorites"
-    )
+    filters = models.JSONField(default=get_default_filters)
+    display_filters = models.JSONField(default=get_default_display_filters)
+    display_properties = models.JSONField(default=get_default_display_properties)
 
     class Meta:
-        unique_together = ["module", "user"]
-        verbose_name = "Module Favorite"
-        verbose_name_plural = "Module Favorites"
-        db_table = "module_favorites"
+        unique_together = ["module", "user", "deleted_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["module", "user"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="module_user_properties_unique_module_user_when_deleted_at_null",
+            )
+        ]
+        verbose_name = "Module User Property"
+        verbose_name_plural = "Module User Property"
+        db_table = "module_user_properties"
         ordering = ("-created_at",)
 
     def __str__(self):
-        """Return user and the module"""
-        return f"{self.user.email} <{self.module.name}>"
+        return f"{self.module.name} {self.user.email}"

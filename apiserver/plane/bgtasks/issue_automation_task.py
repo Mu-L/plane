@@ -2,18 +2,17 @@
 import json
 from datetime import timedelta
 
-# Django imports
-from django.utils import timezone
-from django.db.models import Q
-from django.conf import settings
-
 # Third party imports
 from celery import shared_task
-from sentry_sdk import capture_exception
+from django.db.models import Q
+
+# Django imports
+from django.utils import timezone
 
 # Module imports
+from plane.bgtasks.issue_activities_task import issue_activity
 from plane.db.models import Issue, Project, State
-from plane.bgtasks.issue_activites_task import issue_activity
+from plane.utils.exception_logger import log_exception
 
 
 @shared_task
@@ -32,7 +31,7 @@ def archive_old_issues():
             archive_in = project.archive_in
 
             # Get all the issues whose updated_at in less that the archive_in month
-            issues = Issue.objects.filter(
+            issues = Issue.issue_objects.filter(
                 Q(
                     project=project_id,
                     archived_at__isnull=True,
@@ -41,49 +40,55 @@ def archive_old_issues():
                 ),
                 Q(issue_cycle__isnull=True)
                 | (
-                    Q(issue_cycle__cycle__end_date__lt=timezone.now().date())
+                    Q(issue_cycle__cycle__end_date__lt=timezone.now())
                     & Q(issue_cycle__isnull=False)
                 ),
                 Q(issue_module__isnull=True)
                 | (
-                    Q(issue_module__module__target_date__lt=timezone.now().date())
+                    Q(issue_module__module__target_date__lt=timezone.now())
                     & Q(issue_module__isnull=False)
                 ),
             ).filter(
-                Q(issue_inbox__status=1)
-                | Q(issue_inbox__status=-1)
-                | Q(issue_inbox__status=2)
-                | Q(issue_inbox__isnull=True)
+                Q(issue_intake__status=1)
+                | Q(issue_intake__status=-1)
+                | Q(issue_intake__status=2)
+                | Q(issue_intake__isnull=True)
             )
 
             # Check if Issues
             if issues:
+                # Set the archive time to current time
+                archive_at = timezone.now().date()
+
                 issues_to_update = []
                 for issue in issues:
-                    issue.archived_at = timezone.now()
+                    issue.archived_at = archive_at
                     issues_to_update.append(issue)
 
                 # Bulk Update the issues and log the activity
-                Issue.objects.bulk_update(
-                    issues_to_update, ["archived_at"], batch_size=100
-                )
-                [
-                    issue_activity.delay(
-                        type="issue.activity.updated",
-                        requested_data=json.dumps({"archived_at": str(issue.archived_at)}),
-                        actor_id=str(project.created_by_id),
-                        issue_id=issue.id,
-                        project_id=project_id,
-                        current_instance=None,
-                        subscriber=False,
+                if issues_to_update:
+                    Issue.objects.bulk_update(
+                        issues_to_update, ["archived_at"], batch_size=100
                     )
-                    for issue in issues_to_update
-                ]
+                    _ = [
+                        issue_activity.delay(
+                            type="issue.activity.updated",
+                            requested_data=json.dumps(
+                                {"archived_at": str(archive_at), "automation": True}
+                            ),
+                            actor_id=str(project.created_by_id),
+                            issue_id=issue.id,
+                            project_id=project_id,
+                            current_instance=json.dumps({"archived_at": None}),
+                            subscriber=False,
+                            epoch=int(timezone.now().timestamp()),
+                            notification=True,
+                        )
+                        for issue in issues_to_update
+                    ]
         return
     except Exception as e:
-        if settings.DEBUG:
-            print(e)
-        capture_exception(e)
+        log_exception(e)
         return
 
 
@@ -99,7 +104,7 @@ def close_old_issues():
             close_in = project.close_in
 
             # Get all the issues whose updated_at in less that the close_in month
-            issues = Issue.objects.filter(
+            issues = Issue.issue_objects.filter(
                 Q(
                     project=project_id,
                     archived_at__isnull=True,
@@ -108,19 +113,19 @@ def close_old_issues():
                 ),
                 Q(issue_cycle__isnull=True)
                 | (
-                    Q(issue_cycle__cycle__end_date__lt=timezone.now().date())
+                    Q(issue_cycle__cycle__end_date__lt=timezone.now())
                     & Q(issue_cycle__isnull=False)
                 ),
                 Q(issue_module__isnull=True)
                 | (
-                    Q(issue_module__module__target_date__lt=timezone.now().date())
+                    Q(issue_module__module__target_date__lt=timezone.now())
                     & Q(issue_module__isnull=False)
                 ),
             ).filter(
-                Q(issue_inbox__status=1)
-                | Q(issue_inbox__status=-1)
-                | Q(issue_inbox__status=2)
-                | Q(issue_inbox__isnull=True)
+                Q(issue_intake__status=1)
+                | Q(issue_intake__status=-1)
+                | Q(issue_intake__status=2)
+                | Q(issue_intake__isnull=True)
             )
 
             # Check if Issues
@@ -136,22 +141,27 @@ def close_old_issues():
                     issues_to_update.append(issue)
 
                 # Bulk Update the issues and log the activity
-                Issue.objects.bulk_update(issues_to_update, ["state"], batch_size=100)
-                [
-                    issue_activity.delay(
-                        type="issue.activity.updated",
-                        requested_data=json.dumps({"closed_to": str(issue.state_id)}),
-                        actor_id=str(project.created_by_id),
-                        issue_id=issue.id,
-                        project_id=project_id,
-                        current_instance=None,
-                        subscriber=False,
+                if issues_to_update:
+                    Issue.objects.bulk_update(
+                        issues_to_update, ["state"], batch_size=100
                     )
-                    for issue in issues_to_update
-                ]
+                    [
+                        issue_activity.delay(
+                            type="issue.activity.updated",
+                            requested_data=json.dumps(
+                                {"closed_to": str(issue.state_id)}
+                            ),
+                            actor_id=str(project.created_by_id),
+                            issue_id=issue.id,
+                            project_id=project_id,
+                            current_instance=None,
+                            subscriber=False,
+                            epoch=int(timezone.now().timestamp()),
+                            notification=True,
+                        )
+                        for issue in issues_to_update
+                    ]
         return
     except Exception as e:
-        if settings.DEBUG:
-            print(e)
-        capture_exception(e)
+        log_exception(e)
         return
